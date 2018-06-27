@@ -1,3 +1,6 @@
+let cookieParser = require('cookie-parser');
+let moment = require('moment');
+
 var sysUtils = require('./utils');
 
 console.log("");
@@ -40,7 +43,32 @@ app.use(function(req, res, next) {
   next();
 });
 
+app.use(cookieParser());
+
 app.use(sysUtils.cacheMiddleware);
+
+app.use(async function(req, res, next) {
+	console.log('Authentication middleware');
+	console.log(req.cookies.sessionid);
+
+	let sessionResult = await global.env.mongo.db('live').collection('sessions').findOne({
+		token: req.cookies['sessionid'],
+		expires: {
+			$gt: moment.utc().toDate()
+		},
+		logout: null
+	});
+	console.log(sessionResult);
+
+	if (sessionResult == null || sessionResult.length === 0) {
+		return next(new Error({code: 401, message: 'No valid session'}))
+    }
+	if (sessionResult.length > 1) {
+		return next(new Error({code: 401, message: 'Duplicate session.'}));
+	}
+
+	next();
+});
 
 
 require('./modules/api/views')(app);
