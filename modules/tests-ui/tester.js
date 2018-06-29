@@ -3,7 +3,6 @@ global.CONFIG = require('../../config');
 if (!CONFIG.tests) {
     console.error('Tests not started: CONFIG.tests not configured.');
     process.exit(0);
-    return;
 }
 
 process.title = "iframely-tests";
@@ -50,7 +49,6 @@ var TestingProgress = models.TestingProgress;
 
 if (!PluginTest) {
     process.exit(0);
-    return;
 }
 
 function log() {

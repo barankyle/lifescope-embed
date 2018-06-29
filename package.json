@@ -20,6 +20,9 @@
     "license": "MIT",
     "dependencies": {
         "async": "2.4.1",
+        "babel-cli": "^6.26.0",
+        "babel-plugin-transform-flow-strip-types": "^6.22.0",
+        "babel-plugin-transform-object-rest-spread": "^6.26.0",
         "cheerio": "0.22.0",
         "chokidar": "^2.0.3",
         "cookie-parser": "^1.4.3",
@@ -44,16 +47,14 @@
         "request": "^2.87.0",
         "sax": "1.2.2",
         "send": "0.16.1",
+        "source-map-support": "^0.5.6",
         "underscore": "1.8.3"
     },
     "devDependencies": {
-        "babel-cli": "^6.26.0",
         "babel-core": "^6.26.3",
         "babel-eslint": "^8.2.5",
         "babel-jest": "^23.2.0",
         "babel-plugin-transform-es2015-modules-amd": "^6.24.1",
-        "babel-plugin-transform-flow-strip-types": "^6.22.0",
-        "babel-plugin-transform-object-rest-spread": "^6.26.0",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-preset-env": "^1.7.0",
         "babel-preset-stage-2": "^6.24.1",
@@ -84,7 +85,9 @@
     "iframely-proxy-plugins": true,
     "main": "./lib/core",
     "scripts": {
-        "build": "backpack build",
+        "build": "sh build.sh",
+        "start": "node build/main.js",
+        "serve": "NODE_ENV=production node server.js",
         "test": "vows test/main.js --isolate --spec && npm run test-e2e",
         "test-e2e": "NODE_ENV=test PORT=8080 mocha --exit test/e2e.js"
     },

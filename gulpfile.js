@@ -64,13 +64,23 @@ gulp.task('bundle:ebs', function() {
 	let renameExpression = new RegExp('^' + basename);
 
 	return gulp.src([
-    '.ebextensions/**',
-    'build/**',
-    'config/**',
-    '.babelrc',
-    '.npmrc',
-    'package.json',
-    'server.js'
+	    '.ebextensions/**',
+	    'lib/**',
+	    'modules/**',
+	    'plugins/**',
+	    'static/**',
+	    'views/**',
+	    '.babelrc',
+	    '.npmrc',
+	    'app.js',
+	    'config.js',
+	    'config.production.js',
+	    'logging.js',
+	    'package.json',
+		'pm2.json',
+		'restart-cluster.sh',
+		'server.js',
+		'utils.js'
 	], {
 		nodir: true,
     dot: true,

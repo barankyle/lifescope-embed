@@ -159,180 +159,263 @@
     }
 
     exports.cacheMiddleware = function(req, res, next) {
+        if (req.user == null) {
+	        // Copy from source.
+	        res.renderCached = function(view, context, headers) {
 
-        async.waterfall([
+		        if (!fs.existsSync(view)) {
+			        view = __dirname + '/views/' + view;
+		        }
 
-            function(cb) {
-                var refresh = req.query.refresh === "true" || req.query.refresh === "1";
-                if (!refresh) {
+		        var template = fs.readFileSync(view, 'utf8');
+		        var body = ejs.render(template, context);
 
-                    var url = getUnifiedCacheUrl(req);
+		        this.set(headers);
 
-                    var linkValidationKey, uri = prepareUri(req.query.uri || req.query.url);
-                    if (uri) {
-                        linkValidationKey = getKeyForUri(uri);
-                    }
+		        setResponseToCache(200, req, res, body);
 
-                    cache.get('urlcache:' + version + (linkValidationKey || '') + ':' + url, function(error, data) {
-                        if (error) {
-                            console.error('Error getting response from cache', url, error);
-                        }
-                        if (data) {
-                            var index = data.indexOf("::");
-                            if (index > -1) {
-                                var head;
-                                var headStr = data.substring(0, index);
-                                try {
-                                    head = JSON.parse(headStr);
-                                } catch(ex) {
-                                    console.error('Error parsing response status from cache', url, headStr);
-                                }
+		        this.send(body);
+	        };
 
-                                if (head) {
+	        // Copy from source.
+	        res.jsonpCached = function(obj) {
 
-                                    log(req, "Using cache for", req.url.replace(/\?.+/, ''), req.query.uri || req.query.url);
+		        // settings
+		        var app = this.app;
+		        var replacer = app.get('json replacer');
+		        var spaces = app.get('json spaces');
+		        var body = JSON.stringify(obj, replacer, spaces);
 
-                                    var requestedEtag = req.headers['if-none-match'];
+		        // content-type
+		        this.set('Content-Type', 'application/json');
 
-                                    var jsonpCallback = req.query[req.app.get('jsonp callback name')];
-                                    if (jsonpCallback) {
+		        // Cache without jsonp callback.
+		        setResponseToCache(200, req, res, body);
 
-                                        // jsonp case.
+		        // jsonp
+		        var callback = this.req.query[app.get('jsonp callback name')];
+		        if (callback) {
+			        body = body
+				        .replace(/\u2028/g, '\\u2028')
+				        .replace(/\u2029/g, '\\u2029');
 
-                                        var body = data.substring(index + 2);
+			        this.set('Content-Type', 'text/javascript');
+			        var cb = callback.replace(/[^\[\]\w$.]/g, '');
+			        body = cb + ' && ' + cb + '(' + body + ');';
+		        }
 
-                                        body = body
-                                            .replace(/\u2028/g, '\\u2028')
-                                            .replace(/\u2029/g, '\\u2029');
+		        this.send(body);
+	        };
 
-                                        jsonpCallback = jsonpCallback.replace(/[^\[\]\w$.]/g, '');
-                                        body = jsonpCallback + ' && ' + jsonpCallback + '(' + body + ');';
+	        res.sendCached = function(content_type, body, options) {
 
-                                        var realEtag = etag(body);
+		        var status = options && options.code || 200;
 
-                                        if (realEtag === requestedEtag) {
-                                            res.writeHead(304);
-                                            res.end();
-                                        } else {
-                                            res.set(head.headers);
-                                            res.set('ETag', realEtag);
-                                            res.set('Content-Type', 'text/javascript');
-                                            res
-                                                .status(head.statusCode || 200)
-                                                .send(body);
-                                        }
+		        this.set('Content-Type', content_type);
 
-                                    } else {
+		        // setResponseToCache(status, req, res, body, options && options.ttl);
 
-                                        // Common case.
+		        this.status(status).send(body);
+	        };
 
-                                        if (head.etag === requestedEtag) {
-                                            res.writeHead(304);
-                                            res.end();
-                                        } else {
-                                            res.set(head.headers);
-                                            if (head.etag) {
-                                                res.set('ETag', head.etag);
-                                            }
-                                            res
-                                                .status(head.statusCode || 200)
-                                                .send(data.substring(index + 2));
-                                        }
-                                    }
+	        res.sendJsonCached = function(obj, options) {
 
-                                } else {
-                                    cb();
-                                }
-                            }
-                        } else {
-                            cb();
-                        }
-                    });
+		        var app = this.app;
+		        var replacer = app.get('json replacer');
+		        var spaces = app.get('json spaces');
 
-                } else {
-                    cb();
-                }
-            }
+		        var body = JSON.stringify(obj, replacer, spaces);
 
-        ], function() {
+		        this.set('Content-Type', 'application/json');
 
-            // Copy from source.
-            res.renderCached = function(view, context, headers) {
+		        var status = options && options.code || 200;
 
-                if (!fs.existsSync(view)) {
-                    view = __dirname + '/views/' + view;
-                }
+		        // setResponseToCache(status, req, res, body, options && options.ttl);
 
-                var template = fs.readFileSync(view, 'utf8');
-                var body = ejs.render(template, context);
+		        this.status(status).send(body);
+	        };
 
-                this.set(headers);
+	        let err = new Error;
+	        err.code = 401;
 
-                setResponseToCache(200, req, res, body);
+	        next(err);
+        }
+        else {
 
-                this.send(body);
-            };
+	        async.waterfall([
 
-            // Copy from source.
-            res.jsonpCached = function(obj) {
+		        function(cb) {
+			        var refresh = req.query.refresh === "true" || req.query.refresh === "1";
+			        if (!refresh) {
 
-                // settings
-                var app = this.app;
-                var replacer = app.get('json replacer');
-                var spaces = app.get('json spaces');
-                var body = JSON.stringify(obj, replacer, spaces);
+				        var url = getUnifiedCacheUrl(req);
 
-                // content-type
-                this.set('Content-Type', 'application/json');
+				        var linkValidationKey, uri = prepareUri(req.query.uri || req.query.url);
+				        if (uri) {
+					        linkValidationKey = getKeyForUri(uri);
+				        }
 
-                // Cache without jsonp callback.
-                setResponseToCache(200, req, res, body);
+				        cache.get('urlcache:' + version + (linkValidationKey || '') + ':' + url, function(error, data) {
+					        if (error) {
+						        console.error('Error getting response from cache', url, error);
+					        }
+					        if (data) {
+						        var index = data.indexOf("::");
+						        if (index > -1) {
+							        var head;
+							        var headStr = data.substring(0, index);
+							        try {
+								        head = JSON.parse(headStr);
+							        } catch(ex) {
+								        console.error('Error parsing response status from cache', url, headStr);
+							        }
 
-                // jsonp
-                var callback = this.req.query[app.get('jsonp callback name')];
-                if (callback) {
-                    body = body
-                        .replace(/\u2028/g, '\\u2028')
-                        .replace(/\u2029/g, '\\u2029');
+							        if (head) {
 
-                    this.set('Content-Type', 'text/javascript');
-                    var cb = callback.replace(/[^\[\]\w$.]/g, '');
-                    body = cb + ' && ' + cb + '(' + body + ');';
-                }
+								        log(req, "Using cache for", req.url.replace(/\?.+/, ''), req.query.uri || req.query.url);
 
-                this.send(body);
-            };
+								        var requestedEtag = req.headers['if-none-match'];
 
-            res.sendCached = function(content_type, body, options) {
+								        var jsonpCallback = req.query[req.app.get('jsonp callback name')];
+								        if (jsonpCallback) {
 
-                var status = options && options.code || 200;
+									        // jsonp case.
 
-                this.set('Content-Type', content_type);
+									        var body = data.substring(index + 2);
 
-                setResponseToCache(status, req, res, body, options && options.ttl);
+									        body = body
+										        .replace(/\u2028/g, '\\u2028')
+										        .replace(/\u2029/g, '\\u2029');
 
-                this.status(status).send(body);
-            };
+									        jsonpCallback = jsonpCallback.replace(/[^\[\]\w$.]/g, '');
+									        body = jsonpCallback + ' && ' + jsonpCallback + '(' + body + ');';
 
-            res.sendJsonCached = function(obj, options) {
+									        var realEtag = etag(body);
 
-                var app = this.app;
-                var replacer = app.get('json replacer');
-                var spaces = app.get('json spaces');
+									        if (realEtag === requestedEtag) {
+										        res.writeHead(304);
+										        res.end();
+									        } else {
+										        res.set(head.headers);
+										        res.set('ETag', realEtag);
+										        res.set('Content-Type', 'text/javascript');
+										        res
+											        .status(head.statusCode || 200)
+											        .send(body);
+									        }
 
-                var body = JSON.stringify(obj, replacer, spaces);
+								        } else {
 
-                this.set('Content-Type', 'application/json');
+									        // Common case.
 
-                var status = options && options.code || 200;
+									        if (head.etag === requestedEtag) {
+										        res.writeHead(304);
+										        res.end();
+									        } else {
+										        res.set(head.headers);
+										        if (head.etag) {
+											        res.set('ETag', head.etag);
+										        }
+										        res
+											        .status(head.statusCode || 200)
+											        .send(data.substring(index + 2));
+									        }
+								        }
 
-                setResponseToCache(status, req, res, body, options && options.ttl);
+							        } else {
+								        cb();
+							        }
+						        }
+					        } else {
+						        cb();
+					        }
+				        });
 
-                this.status(status).send(body);
-            };
+			        } else {
+				        cb();
+			        }
+		        }
 
-            next();
-        });
+	        ], function() {
+
+		        // Copy from source.
+		        res.renderCached = function(view, context, headers) {
+
+			        if (!fs.existsSync(view)) {
+				        view = __dirname + '/views/' + view;
+			        }
+
+			        var template = fs.readFileSync(view, 'utf8');
+			        var body = ejs.render(template, context);
+
+			        this.set(headers);
+
+			        setResponseToCache(200, req, res, body);
+
+			        this.send(body);
+		        };
+
+		        // Copy from source.
+		        res.jsonpCached = function(obj) {
+
+			        // settings
+			        var app = this.app;
+			        var replacer = app.get('json replacer');
+			        var spaces = app.get('json spaces');
+			        var body = JSON.stringify(obj, replacer, spaces);
+
+			        // content-type
+			        this.set('Content-Type', 'application/json');
+
+			        // Cache without jsonp callback.
+			        setResponseToCache(200, req, res, body);
+
+			        // jsonp
+			        var callback = this.req.query[app.get('jsonp callback name')];
+			        if (callback) {
+				        body = body
+					        .replace(/\u2028/g, '\\u2028')
+					        .replace(/\u2029/g, '\\u2029');
+
+				        this.set('Content-Type', 'text/javascript');
+				        var cb = callback.replace(/[^\[\]\w$.]/g, '');
+				        body = cb + ' && ' + cb + '(' + body + ');';
+			        }
+
+			        this.send(body);
+		        };
+
+		        res.sendCached = function(content_type, body, options) {
+
+			        var status = options && options.code || 200;
+
+			        this.set('Content-Type', content_type);
+
+			        setResponseToCache(status, req, res, body, options && options.ttl);
+
+			        this.status(status).send(body);
+		        };
+
+		        res.sendJsonCached = function(obj, options) {
+
+			        var app = this.app;
+			        var replacer = app.get('json replacer');
+			        var spaces = app.get('json spaces');
+
+			        var body = JSON.stringify(obj, replacer, spaces);
+
+			        this.set('Content-Type', 'application/json');
+
+			        var status = options && options.code || 200;
+
+			        setResponseToCache(status, req, res, body, options && options.ttl);
+
+			        this.status(status).send(body);
+		        };
+
+		        next();
+	        });
+        }
     };
 
 })();

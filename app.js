@@ -45,30 +45,28 @@ app.use(function(req, res, next) {
 
 app.use(cookieParser());
 
-app.use(sysUtils.cacheMiddleware);
-
 app.use(async function(req, res, next) {
-	console.log('Authentication middleware');
-	console.log(req.cookies.sessionid);
-
 	let sessionResult = await global.env.mongo.db('live').collection('sessions').findOne({
-		token: req.cookies['sessionid'],
+		token: req.cookies.sessionid,
 		expires: {
 			$gt: moment.utc().toDate()
 		},
 		logout: null
 	});
-	console.log(sessionResult);
 
 	if (sessionResult == null || sessionResult.length === 0) {
-		return next(new Error({code: 401, message: 'No valid session'}))
-    }
-	if (sessionResult.length > 1) {
-		return next(new Error({code: 401, message: 'Duplicate session.'}));
+	    req.user = null;
 	}
+	else {
+	  req.user = await global.env.mongo.db('live').collection('users').findOne({
+          _id: sessionResult.user_id
+      });
+    }
 
 	next();
 });
+
+app.use(sysUtils.cacheMiddleware);
 
 
 require('./modules/api/views')(app);
@@ -137,6 +135,7 @@ function respondWithError(req, res, code, msg, messages) {
 var proxyErrorCodes = [401, 403, 408];
 
 function errorHandler(err, req, res, next) {
+  console.log(err.code);
   if (err instanceof NotFound) {
     respondWithError(req, res, 404, err.message, err.messages);
   } else {

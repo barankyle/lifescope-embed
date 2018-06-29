@@ -103,7 +103,7 @@
             "scrolling"
         ],
 
-	    "mongo": {
+	    mongo: {
 		    "address": "mongodb://127.0.0.1",
 		    "options": {
 			    "poolSize": 5
@@ -221,18 +221,12 @@
 
     var local;
 
-    console.log(env_config_path)
-
-    console.log('Trying to get paths');
     // Try config by NODE_ENV.
     if (fs.existsSync(env_config_path)) {
-
-        console.log('env_config_path exists');
 
         local = require(env_config_path);
 
     } else if (fs.existsSync(local_config_path)) {
-        console.log('local_config_path exists');
         // Else - try local config.
 
         local = require(local_config_path);

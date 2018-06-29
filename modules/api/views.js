@@ -120,8 +120,6 @@ module.exports = function(app) {
             }
 
         ], function(error, result) {
-
-
             if (error) {
                 return handleIframelyError(error, res, next);
             }
