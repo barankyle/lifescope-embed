@@ -1,6 +1,6 @@
 {
-    "name": "iframely",
-    "version": "1.2.5",
+    "name": "lifescope-embed",
+    "version": "1.0.0",
     "description": "oEmbed/2 gateway endpoint. Get embed data for various http links through one self-hosted API",
     "keywords": [
         "oembed",
@@ -9,13 +9,13 @@
         "og",
         "twitter cards"
     ],
-    "homepage": "http://iframely.com",
+    "homepage": "https://lifescope.io",
     "repository": {
         "type": "git",
-        "url": "https://github.com/itteco/iframely.git"
+        "url": "https://github.com/lifescopelabs/lifescope-embed.git"
     },
     "bugs": {
-        "url": "https://github.com/itteco/iframely/issues"
+        "url": "https://github.com/lifescopelabs/lifescope-embed/issues"
     },
     "license": "MIT",
     "dependencies": {
