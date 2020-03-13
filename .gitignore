@@ -3,6 +3,7 @@
 npm-debug.log
 node_modules
 config.local.js
+config.dev.js
 config.production.js
 test/test2.js
 static/test

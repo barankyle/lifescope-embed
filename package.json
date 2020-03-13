@@ -1,6 +1,6 @@
 {
     "name": "lifescope-embed",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "oEmbed/2 gateway endpoint. Get embed data for various http links through one self-hosted API",
     "keywords": [
         "oembed",
@@ -88,6 +88,7 @@
         "build": "sh build.sh",
         "start": "node build/main.js",
         "serve": "NODE_ENV=production node server.js",
+        "serve-dev": "NODE_ENV=dev node server.js",
         "test": "vows test/main.js --isolate --spec && npm run test-e2e",
         "test-e2e": "NODE_ENV=test PORT=8080 mocha --exit test/e2e.js"
     },

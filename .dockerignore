@@ -1,2 +1,6 @@
 .git
 .gitignore
+config.dev.js
+config.local.js
+config.prod.js
+config.production.js

@@ -9,4 +9,4 @@ RUN npm install --production
 COPY . .
 
 EXPOSE 8061
-CMD ["npm", "run", "serve"]
+CMD ["npm", "run", "serve-dev"]
