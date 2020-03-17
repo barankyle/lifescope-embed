@@ -30,6 +30,11 @@ The embed server was designed to be uploaded and run via Kubernetes. To date it 
 All further instructions will assume AWS technologies since we can speak to them; using another cloud provider should
 work similarly, just with appropriate deviations to account for how Google/Microsoft/etc. clouds work in practice. 
 
+## Location of Kubernetes scripts
+
+This guide references Kubernetes configuration scripts. 
+These scripts are all located in [a separate repository](https://github.com/lifescopelabs/lifescope-kubernetes).
+
 ## Create config file
 You'll need to create a new file in the config folder called config.production.js.
 The gitignore contains this filename, so there's no chance of accidentally committing it.
@@ -61,7 +66,12 @@ by the makers of those services are more than sufficient.
 Once you've created a DockerHub account, you'll need to make a public repository, most easily named ```lifescope-embed```. 
 If you use different names, you'll have to change the image names in the various .yaml files in the /kube/* directories.
 
-## Containerize the API with Docker
+## Containerize the Embed server with Docker (optional)
+
+*LifeScope has a Docker Hub account with repositories for images of each of the applications that make up the service.
+The Kubernetes scripts are coded to pull specific versions from the official repos.
+If you want to pull from a repo you control, do the following:*
+
 After installing Docker on your machine, from the top level of this application run ```docker build -t <DockerHub username>/lifescope-embed:vX.Y.Z .```.
 X,Y, and Z should be the current version of the embed-server, though it's not required that you tag the image with a version.
 
