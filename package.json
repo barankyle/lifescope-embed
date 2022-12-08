@@ -28,7 +28,7 @@
         "cookie-parser": "^1.4.3",
         "ejs": "2.5.7",
         "entities": "1.1.1",
-        "express": "^4.16.3",
+        "express": "^4.17.3",
         "graceful-cluster": "0.0.3",
         "htmlparser2": "3.9.2",
         "http-errors": "^1.6.3",
