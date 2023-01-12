@@ -77,7 +77,7 @@
         "gulp-zip": "^4.1.0",
         "mocha": "^5.2.0",
         "mock-http-server": "0.0.4",
-        "mongoose": "4.10.5",
+        "mongoose": "4.13.21",
         "run-sequence": "^2.2.1",
         "supertest": "^3.1.0",
         "vows": "0.7.0"
